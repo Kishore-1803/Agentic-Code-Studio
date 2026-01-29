@@ -33,12 +33,13 @@ Built on the **Actor-Critic** architecture using **LangGraph**, it orchestrates 
 The system uses a directed cyclic graph (DAG) managed by **LangGraph** to control agent state transitions.
 
 ```mermaid
-graph LR
+graph TD
     A[User Input] --> B(Developer)
-    B --> C{Tests Pass?}
-    C -- No --> D(Critic)
-    D --> B
-    C -- Yes --> E[Success]
+    B --> C(Critic)
+    C -- Rejected --> B
+    C -- Approved --> D(Tester)
+    D -- Failed --> B
+    D -- Passed --> E[Success]
 ```
 
 ##  Getting Started
