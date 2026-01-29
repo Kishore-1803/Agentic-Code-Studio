@@ -20,7 +20,7 @@ export default function Home() {
   const [inputCode, setInputCode] = useState('def add(a, b):\n    return a - b  # Bug: subtraction instead of addition');
   const [bugDescription, setBugDescription] = useState('The add function returns the wrong result. It seems to subtract instead of add.');
   const [testInput, setTestInput] = useState('');
-  const [language, setLanguage] = useState('python');
+  const [language, setLanguage] = useState<'python' | 'cpp' | 'java' | 'javascript'>('python'); // Changed from string to enum
   const [complexityData, setComplexityData] = useState<{
       origTime?: string;
       origSpace?: string;
@@ -35,17 +35,17 @@ export default function Home() {
     setEvents([]);
     setComplexityData({});
 
-    let endpoint = 'http://localhost:8000/analyze/fix';
-    if (mode === 'optimize') endpoint = 'http://localhost:8000/analyze/optimize';
-    if (mode === 'security') endpoint = 'http://localhost:8000/analyze/security';
+    let endpoint = 'http://localhost:8000/api/bug-fix';
+    if (mode === 'optimize') endpoint = 'http://localhost:8000/api/optimize';
+    if (mode === 'security') endpoint = 'http://localhost:8000/api/security';
     
     let payload = {};
     if (mode === 'fix') {
-        payload = { description: bugDescription, code: inputCode };
+        payload = { issue: bugDescription, code: inputCode, language: language };
     } else if (mode === 'optimize') {
-        payload = { code: inputCode, test_input: testInput, language: language };
+        payload = { code: inputCode, test_code: testInput, language: language };
     } else if (mode === 'security') {
-        payload = { code: inputCode };
+        payload = { code: inputCode, language: language };
     }
 
     console.log("Sending payload:", payload);
@@ -57,27 +57,35 @@ export default function Home() {
             body: JSON.stringify(payload)
         });
 
-        if (!response.body) throw new Error("No response body");
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n').filter(line => line.trim());
-            
-            for (const line of lines) {
-                try {
-                    const data = JSON.parse(line);
-                    processEvent(data);
-                } catch (e) {
-                    console.error("Error parsing JSON", e);
-                }
-            }
+        if (!response.ok) throw new Error(`Server returned ${response.status}`);
+        
+        const data = await response.json();
+        
+        // Handle new backend response structure
+        if (data.final_code) {
+             setEvents(prev => [...prev, {
+                 agent: 'System',
+                 message: 'Final Code Result',
+                 metadata: { code: data.final_code }
+             }]);
         }
+        
+        // Handle Complexity Data
+        if (data.complexity) {
+            setComplexityData({
+                origTime: data.complexity.orig_time,
+                origSpace: data.complexity.orig_space,
+                optTime: data.complexity.opt_time,
+                optSpace: data.complexity.opt_space
+            });
+        }
+
+        if (data.logs && Array.isArray(data.logs)) {
+             data.logs.forEach((logStr: string) => {
+                 processLogEvent(logStr);
+             });
+        }
+        
     } catch (error: any) {
         console.error("Error:", error);
         setEvents(prev => [...prev, {
@@ -90,6 +98,28 @@ export default function Home() {
     }
   };
 
+  const processLogEvent = (logStr: string) => {
+      let agent = "System";
+      let message = logStr;
+      
+      if (logStr.startsWith("Developer:")) {
+          agent = "Developer";
+          message = logStr.replace("Developer:", "").trim();
+      } else if (logStr.startsWith("Critic:")) {
+          agent = "Critic";
+          message = logStr.replace("Critic:", "").trim();
+      } else if (logStr.startsWith("Tester:")) {
+          agent = "Tester";
+          message = logStr.replace("Tester:", "").trim();
+      }
+
+      setEvents(prev => [...prev, {
+          agent: agent,
+          message: message
+      }]);
+  };
+    
+  // Deprecated legacy handler
   const processEvent = (data: any) => {
     let newEvent: AgentEvent | null = null;
     let newCode: string | null = null;

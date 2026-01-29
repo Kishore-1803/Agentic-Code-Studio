@@ -99,6 +99,31 @@ const renderVulnerabilities = () => {
     };
 
     
+    const renderComplexity = () => {
+        if (!event.metadata?.complexity) return null;
+        
+        const { orig_time, orig_space, opt_time, opt_space } = event.metadata.complexity;
+        
+        return (
+            <div className="mt-4 grid grid-cols-2 gap-4 bg-black/20 p-3 rounded border border-white/5">
+                <div>
+                    <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Time Complexity</div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-slate-400 line-through text-xs">{orig_time}</span>
+                        <span className="text-green-400 font-bold">{opt_time}</span>
+                    </div>
+                </div>
+                <div>
+                    <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Space Complexity</div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-slate-400 line-through text-xs">{orig_space}</span>
+                        <span className="text-green-400 font-bold">{opt_space}</span>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     // Optimization complexity display (for Optimizer and Benchmarker events)
     const agentKey = event.agent.toLowerCase();
     
@@ -111,6 +136,7 @@ const renderVulnerabilities = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             
                 {renderVulnerabilities()}
+                {renderComplexity()}
             <div className="flex items-center justify-between mb-2 relative z-10">
                 <div className="flex items-center gap-3">
                     <div className={`p-1.5 rounded border ${getColors().split(' ').slice(0, 2).join(' ')} bg-opacity-20`}>

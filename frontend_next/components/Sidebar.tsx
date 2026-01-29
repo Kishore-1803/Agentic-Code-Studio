@@ -12,8 +12,8 @@ interface SidebarProps {
     setTestInput: (input: string) => void;
     startProcess: () => void;
     processing: boolean;
-    language: string;
-    setLanguage: (lang: string) => void;
+    language: "python" | "cpp" | "java" | "javascript";
+    setLanguage: (lang: "python" | "cpp" | "java" | "javascript") => void;
     complexityData?: {
         origTime?: string;
         origSpace?: string;
@@ -38,8 +38,9 @@ export function Sidebar({
 }: SidebarProps) {
     
     useEffect(() => {
+        // Just rely on initial state or user selection, don't force SQL since we are fixing Python wrappers usually
         if (mode === 'security') {
-            setLanguage('sql');
+            // Optional: reset to python if we want security to imply python backend issues
         }
     }, [mode, setLanguage]);
 
@@ -58,7 +59,7 @@ export function Sidebar({
                         value={language}
                         onChange={(e) => {
                             console.log("Language changed to:", e.target.value);
-                            setLanguage(e.target.value);
+                            setLanguage(e.target.value as any);
                         }}
                         disabled={mode === 'security'}
                         className={clsx(
@@ -67,15 +68,13 @@ export function Sidebar({
                         )}
                     >
                         {mode === 'security' ? (
-                            <option value="sql">SQL</option>
+                            <option value="python">Python (SQL)</option>
                         ) : (
                             <>
-                                <option value="python">Python 3.10</option>
+                                <option value="python">Python</option>
                                 <option value="javascript">JavaScript</option>
                                 <option value="cpp">C++</option>
                                 <option value="java">Java</option>
-                                <option value="go">Go</option>
-                                <option value="rust">Rust</option>
                             </>
                         )}
                     </select>
