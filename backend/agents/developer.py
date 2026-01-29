@@ -76,6 +76,8 @@ class DeveloperAgent:
             
             Return JSON with 'thought', 'code', 'original_time_complexity', 'original_space_complexity', 
             'optimized_time_complexity', 'optimized_space_complexity'.
+             Ensure the response is a strictly valid JSON.
+             Do NOT include any newlines in the JSON string values.
             {format_instructions}
             """
         )
@@ -88,20 +90,21 @@ class DeveloperAgent:
             "format_instructions": self.opt_parser.get_format_instructions()
         })
 
-    def fix_security(self, code: str, feedback: str = "") -> dict:
-        # Security is language agnostic mostly, or we assume it's Python/SQL from context usually?
-        # But let's assume Python for now as per previous, or user could supply language.
-        # User request "security(only for SQL)".
-        # Let's keep it simple.
+    def fix_security(self, code: str, language: str = "sql", feedback: str = "") -> dict:
         prompt = ChatPromptTemplate.from_template(
             """You are an expert Security Engineer. 
-            Task: Identify and fix SQL Injection vulnerabilities in the code.
-            Use parameterized queries.
+            Task: Identify and fix vulnerabilities in the code.
+            Language: {language}
+
+            Criteria:
+            - If language is 'sql' or 'postgresql', STRICTLY check for SQL Injection. Use parameterized queries.
+            - If language is 'sql' use '?' as placeholder.
+            - If language is 'postgresql' use '$1', '$2' etc as placeholder. 
+            - If language is 'python', check for common vulnerabilities (SQLi, XSS, etc.).
             
             IMPORTANT:
-            - If the input is just a SQL query, return ONLY the corrected SQL query (using placeholders like ? or %s).
+            - If the input is just a SQL query, return ONLY the corrected SQL query.
             - If the input is Python code, return ONLY the corrected Python function/snippet.
-            - Do NOT generate a full runnable script with database setup/mocking unless the input was already a full script.
             - Keep the output minimal and focused on the fix.
             
             Code:
@@ -118,6 +121,7 @@ class DeveloperAgent:
         time.sleep(15)
         return chain.invoke({
             "code": code, 
+            "language": language,
             "feedback": feedback,
             "format_instructions": self.parser.get_format_instructions()
         })
@@ -138,6 +142,7 @@ class DeveloperAgent:
             1. Imports necessary libraries (if not likely present in the code).
             2. Defines the main execution block (e.g. `if __name__ == "__main__":` or `int main()`).
             3. Calls the relevant function from the 'Code' with the 'Test Input' data.
+               - If the input contains multiple comma-separated values, treat them as ordered arguments for the function.
             4. Prints output so execution time can be measured.
             
             IMPORTANT:
@@ -149,8 +154,9 @@ class DeveloperAgent:
             - If it is just data, wrap it in a function call.
             
             IF 'Test Input' IS EMPTY or NULL:
-            - ANALYZE the 'Code' to determine valid input types.
-            - GENERATE a challenging test case (large input for benchmarking if possible) inside the driver.
+            - ANALYZE the 'Code' to find the function signature and parameters.
+            - GENERATE valid inputs that match the parameter types and order.
+            - Create a challenging test case (large input for benchmarking if possible) inside the driver.
             - Create the driver using this generated input.
             
             Return JSON with 'thought' and 'driver_code'.

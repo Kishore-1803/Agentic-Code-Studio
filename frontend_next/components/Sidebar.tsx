@@ -12,8 +12,8 @@ interface SidebarProps {
     setTestInput: (input: string) => void;
     startProcess: () => void;
     processing: boolean;
-    language: "python" | "cpp" | "java" | "javascript";
-    setLanguage: (lang: "python" | "cpp" | "java" | "javascript") => void;
+    language: "python" | "cpp" | "java" | "sql" | "postgresql";
+    setLanguage: (lang: "python" | "cpp" | "java" | "sql" | "postgresql") => void;
     complexityData?: {
         origTime?: string;
         origSpace?: string;
@@ -57,22 +57,17 @@ export function Sidebar({
                     </label>
                     <select 
                         value={language}
-                        onChange={(e) => {
-                            console.log("Language changed to:", e.target.value);
-                            setLanguage(e.target.value as any);
-                        }}
-                        disabled={mode === 'security'}
-                        className={clsx(
-                            "bg-blue-950/50 border border-blue-500/30 text-blue-300 text-[10px] rounded px-2 py-1 uppercase font-mono focus:outline-none focus:border-blue-500",
-                            mode === 'security' && "opacity-50 cursor-not-allowed"
-                        )}
+                        onChange={(e) => setLanguage(e.target.value as "python" | "cpp" | "java" | "sql" | "postgresql")}
+                        className="bg-blue-950/50 border border-blue-500/30 text-blue-300 text-[10px] rounded px-2 py-1 uppercase font-mono focus:outline-none focus:border-blue-500"
                     >
                         {mode === 'security' ? (
-                            <option value="python">Python (SQL)</option>
+                            <>
+                                <option value="sql">SQL</option>
+                                <option value="postgresql">PostgreSQL</option>
+                            </>
                         ) : (
                             <>
                                 <option value="python">Python</option>
-                                <option value="javascript">JavaScript</option>
                                 <option value="cpp">C++</option>
                                 <option value="java">Java</option>
                             </>

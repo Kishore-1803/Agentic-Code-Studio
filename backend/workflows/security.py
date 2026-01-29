@@ -11,6 +11,7 @@ class WorkflowState(TypedDict):
     iterations: int
     status: str
     logs: list
+    language: str
 
 class SecurityWorkflow:
     def __init__(self):
@@ -22,9 +23,6 @@ class SecurityWorkflow:
         
         graph.add_node("developer", self.developer_step)
         graph.add_node("critic", self.critic_step)
-        # Tester step is optional for SQLi unless we have a specific SQL test rig. 
-        # For this version, we'll trust the Critic + Static analysis logical check.
-        # But user asked for 3 agents. Let's include Tester to just run the code and ensure it's valid Python syntax/runtime.
         graph.add_node("tester", self.tester_step)
         
         graph.set_entry_point("developer")
@@ -72,7 +70,7 @@ class SecurityWorkflow:
             }
 
         # Sanity check: Does the code even run?
-        res = self.tester.run_test(state['current_code'])
+        res = self.tester.run_test(state['current_code'], language=state.get('language', 'python'))
         success = res['success']
         err = res['error']
         log = f"Tester: Syntax/Runtime Check: {'PASSED' if success else 'FAILED'}"
@@ -83,9 +81,10 @@ class SecurityWorkflow:
         }
 
     def check_critique(self, state: WorkflowState):
-        if state['iterations'] > 3: return "tester"
-        if state['status'] == "approved": return "tester"
-        return "developer"
+        if state.get('status') == 'error': return "error"
+        if state['iterations'] > 3: return "approved"
+        if state['status'] == "approved": return "approved"
+        return "rejected"
 
     def check_test(self, state: WorkflowState):
         if state['iterations'] > 5: return END

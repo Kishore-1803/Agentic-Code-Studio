@@ -76,6 +76,7 @@ async def analyze_security(body: RequestBody):
     workflow = SecurityWorkflow()
     initial_state = {
         "code": body.code, 
+        "language": body.language,
         "logs": []
     }
     result = workflow.app.invoke(initial_state)

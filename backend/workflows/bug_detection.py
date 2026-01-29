@@ -72,7 +72,7 @@ class BugDetectionWorkflow:
 
     def tester_step(self, state: WorkflowState):
         # We assume test_code is provided or we just run the code to check for runtime errors
-        test_res = self.tester.run_test(state['current_code'], state.get('test_code', ''))
+        test_res = self.tester.run_test(state['current_code'], state.get('test_code', ''), language=state.get('language', 'python'))
         success = test_res['success']
         output = test_res['error'] if not success else test_res['output']
         log = f"Tester: {'PASSED' if success else 'FAILED'}. Output: {output[:100]}..."
@@ -86,9 +86,9 @@ class BugDetectionWorkflow:
 
     def check_critique(self, state: WorkflowState):
         if state.get('status') == 'error': return "error"
-        if state['iterations'] > 3: return "tester" # Force test after 3 tries
-        if state['status'] == "approved": return "tester"
-        return "developer"
+        if state['iterations'] > 3: return "approved" # Force test after 3 tries (map to tester)
+        if state['status'] == "approved": return "approved"
+        return "rejected"
 
     def check_test(self, state: WorkflowState):
         if state['iterations'] > 5: return END

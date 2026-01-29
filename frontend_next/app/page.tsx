@@ -20,7 +20,7 @@ export default function Home() {
   const [inputCode, setInputCode] = useState('def add(a, b):\n    return a - b  # Bug: subtraction instead of addition');
   const [bugDescription, setBugDescription] = useState('The add function returns the wrong result. It seems to subtract instead of add.');
   const [testInput, setTestInput] = useState('');
-  const [language, setLanguage] = useState<'python' | 'cpp' | 'java' | 'javascript'>('python'); // Changed from string to enum
+  const [language, setLanguage] = useState<'python' | 'cpp' | 'java' | 'sql' | 'postgresql'>('python'); // Changed from string to enum
   const [complexityData, setComplexityData] = useState<{
       origTime?: string;
       origSpace?: string;
