@@ -14,12 +14,16 @@ Built on the **Actor-Critic** architecture using **LangGraph**, it orchestrates 
 ##  Key Features
 
 *   ** Automated Bug Fixing**: A loop of proposing fixes, critiquing logic, and verifying with tests.
-*   ** Code Optimization**: Specialized workflows to analyze time/space complexity and refactor code for better performance.
-*   ** Security Auditing**: Scans for vulnerabilities (SQLi, XSS, etc.) and proposes secure patches.
+*   ** Code Optimization**: Specialized workflows to analyze time/space complexity and refactor code for better performance. Includes automatic test driver generation.
+*   ** Security Auditing**: Scans for vulnerabilities (SQLi, XSS, etc.) and proposes secure patches. 
+    *   **Specialized Support**: Dedicated checks for **SQL** and **PostgreSQL** injection patterns.
+*   ** Multi-Language Support**:
+    *   **Python**, **C++**, **Java** (for Logic & Optimization)
+    *   **SQL**, **PostgreSQL** (for Security)
 *   ** Multi-Agent Collaboration**:
     *   **Developer Agent**: Writes and attempts to fix code.
-    *   **Critic Agent**: Reviews code for best practices and logical errors.
-    *   **Tester Agent**: Generates and executes unit tests to confirm stability.
+    *   **Critic Agent**: Reviews code for best practices and logical errors using static analysis.
+    *   **Tester Agent**: Generates and executes unit tests (supports Python, C++, Java) to confirm stability.
 *   ** Modern Interface**: A slick Next.js dashboard to visualize the agent workflow, diffs, and chat history.
 
 ---
@@ -44,6 +48,8 @@ graph LR
 *   **Python 3.9+**
 *   **Node.js 18+**
 *   **Google Gemini API Key** (or compatible LLM provider)
+*   **Java JDK** (for Java testing)
+*   **G++ / MinGW** (for C++ testing)
 
 ### 1. Clone the Repository
 
@@ -93,6 +99,9 @@ You need to run both the backend server and the frontend client.
 **Terminal 1: Backend API**
 ```bash
 # From the root directory
+python -m backend.server
+# or
+cd backend
 python server.py
 # Server runs on http://localhost:8000
 ```
@@ -112,16 +121,11 @@ Open **http://localhost:3000** in your browser to start using the Agentic Code S
 ##  Project Structure
 
 ```bash
- agents/                 # AI Agent definitions (Developer, Critic, Tester)
- frontend_next/          # Next.js Web Application
- dataset_interface.py    # Abstraction for dataset interaction (BugsInPy)
- main.py                 # CLI Entry point
- server.py               # FastAPI Backend
- workflow.py             # LangGraph Bug Fix Workflow
- optimization_workflow.py# Code Optimization Workflow
- security_workflow.py    # Security Audit Workflow
+ backend/
+   agents/                 # AI Agent definitions (Developer, Critic, Tester)
+   workflows/              # LangGraph Workflows (Bug Fix, Optimization, Security)
+   server.py               # FastAPI Backend
+ frontend_next/            # Next.js Web Application
+ requirements.txt          # Python dependencies
+ README.md                 # Documentation
 ```
-
----
-
-Created by [Kishore](https://github.com/Kishore-1803)
