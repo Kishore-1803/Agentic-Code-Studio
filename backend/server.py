@@ -14,7 +14,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow all for local dev
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,10 +22,9 @@ app.add_middleware(
 
 class RequestBody(BaseModel):
     code: str
-    issue: str = "" # For bug fix
-    test_code: str = "" # Optional test case
-    language: str = "python" # Default language
-
+    issue: str = "" 
+    test_code: str = "" 
+    language: str = "python"
 @app.get("/")
 def home():
     return {"message": "Agent Backend Ready"}
@@ -60,8 +59,6 @@ async def optimize_code(body: RequestBody):
     return {
         "final_code": result.get("current_code"),
         "logs": result.get("logs"),
-        "initial_time": result.get("initial_time"),
-        "final_time": result.get("final_time"),
         # Return complexity info
         "complexity": {
             "orig_time": result.get("orig_time_complexity"),

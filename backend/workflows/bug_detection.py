@@ -23,11 +23,13 @@ class BugDetectionWorkflow:
         
         graph = StateGraph(WorkflowState)
         
+        graph.add_node("test_gen", self.generate_test_driver)
         graph.add_node("developer", self.developer_step)
         graph.add_node("critic", self.critic_step)
         graph.add_node("tester", self.tester_step)
         
-        graph.set_entry_point("developer")
+        graph.set_entry_point("test_gen")
+        graph.add_edge("test_gen", "developer")
         
         graph.add_conditional_edges(
             "developer", 
@@ -38,6 +40,26 @@ class BugDetectionWorkflow:
         graph.add_conditional_edges("tester", self.check_test)
         
         self.app = graph.compile()
+
+    def generate_test_driver(self, state: WorkflowState):
+        logs = state.get('logs', [])
+        test_input = state.get('test_code', '').strip()
+        code = state.get('code', '')
+        language = state.get('language', 'python')
+        
+        if not test_input:
+            logs.append("System: No test input provided. AI will generate one.")
+
+        try:
+            result = self.dev.generate_test_driver(code, test_input, language)
+            driver = result['driver_code']
+            log = f"System: Generated test driver for {language}."
+            return {
+                "test_code": driver,
+                "logs": logs + [log]
+            }
+        except Exception as e:
+            return {"logs": logs + [f"System Warning: Failed to generate test driver: {str(e)}"]}
 
     def check_developer(self, state: WorkflowState):
         if state.get('status') == 'error':
@@ -71,22 +93,30 @@ class BugDetectionWorkflow:
         }
 
     def tester_step(self, state: WorkflowState):
-        # We assume test_code is provided or we just run the code to check for runtime errors
-        test_res = self.tester.run_test(state['current_code'], state.get('test_code', ''), language=state.get('language', 'python'))
-        success = test_res['success']
-        output = test_res['error'] if not success else test_res['output']
-        log = f"Tester: {'PASSED' if success else 'FAILED'}. Output: {output[:100]}..."
+        test_driver = state.get('test_code', '')
         
+        # 1. Run the test driver against the FIXED code
+        res_fix = self.tester.run_test(state['current_code'], test_driver, language=state.get('language', 'python'))
+        success = res_fix['success']
+        output = res_fix['error'] if not success else res_fix['output']
+        
+        log = f"Tester: {'PASSED' if success else 'FAILED'}. Output: {output[:100]}..."
         feedback = f"Test Output:\n{output}"
+        
+        if not success:
+             logs = state['logs'] + [log, f"Error Details: {output[:500]}"]
+        else:
+             logs = state['logs'] + [log]
+
         return {
             "status": "passed" if success else "failed",
             "feedback": feedback,
-            "logs": state['logs'] + [log]
+            "logs": logs
         }
 
     def check_critique(self, state: WorkflowState):
         if state.get('status') == 'error': return "error"
-        if state['iterations'] > 3: return "approved" # Force test after 3 tries (map to tester)
+        if state['iterations'] > 3: return "approved" 
         if state['status'] == "approved": return "approved"
         return "rejected"
 

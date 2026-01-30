@@ -97,14 +97,13 @@ class DeveloperAgent:
             Language: {language}
 
             Criteria:
-            - If language is 'sql' or 'postgresql', STRICTLY check for SQL Injection. Use parameterized queries.
+            - Perform a comprehensive security audit looking for: SQL Injection, XSS, Command Injection, Path Traversal, Hardcoded Secrets, Insecure Deserialization, Buffer Overflows, etc.
+            - If language is 'sql' or 'postgresql' focus on modifying queries to use parameterized inputs.
             - If language is 'sql' use '?' as placeholder.
             - If language is 'postgresql' use '$1', '$2' etc as placeholder. 
-            - If language is 'python', check for common vulnerabilities (SQLi, XSS, etc.).
             
             IMPORTANT:
-            - If the input is just a SQL query, return ONLY the corrected SQL query.
-            - If the input is Python code, return ONLY the corrected Python function/snippet.
+            - return ONLY the corrected SQL query.
             - Keep the output minimal and focused on the fix.
             
             Code:

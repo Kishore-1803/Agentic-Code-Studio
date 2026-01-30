@@ -29,7 +29,7 @@ class TesterAgent:
                 f.write("\n\n" + test_code)
             temp_path = f.name
 
-        start_time = time.time()
+        # start_time = time.time()
         try:
             # Run the script
             result = subprocess.run(
@@ -38,23 +38,20 @@ class TesterAgent:
                 text=True,
                 timeout=10
             )
-            execution_time = time.time() - start_time
             
             return {
                 "success": result.returncode == 0,
                 "output": result.stdout,
-                "error": result.stderr,
-                "execution_time": execution_time
+                "error": result.stderr
             }
         except subprocess.TimeoutExpired:
             return {
                 "success": False,
                 "output": "",
-                "error": "Execution timed out.",
-                "execution_time": 10.0
+                "error": "Execution timed out."
             }
         except Exception as e:
-            return {"success": False, "output": "", "error": str(e), "execution_time": 0.0}
+            return {"success": False, "output": "", "error": str(e)}
         finally:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
@@ -80,36 +77,30 @@ class TesterAgent:
                  return {
                     "success": False, 
                     "output": "", 
-                    "error": f"Compilation Error:\n{compile_res.stderr}", 
-                    "execution_time": 0.0
+                    "error": f"Compilation Error:\n{compile_res.stderr}"
                  }
                  
-            # Execute
-            start_time = time.time()
             run_res = subprocess.run(
                 [exe_path],
                 capture_output=True,
                 text=True,
                 timeout=10
             )
-            execution_time = time.time() - start_time
             
             return {
                 "success": run_res.returncode == 0,
                 "output": run_res.stdout,
-                "error": run_res.stderr,
-                "execution_time": execution_time
+                "error": run_res.stderr
             }
             
         except FileNotFoundError:
              return {
                 "success": False, 
                 "output": "", 
-                "error": "g++ compiler not found. Please install MinGW or similar.", 
-                "execution_time": 0.0
+                "error": "g++ compiler not found. Please install MinGW or similar."
              }
         except Exception as e:
-            return {"success": False, "output": "", "error": str(e), "execution_time": 0.0}
+            return {"success": False, "output": "", "error": str(e)}
         finally:
             if os.path.exists(src_path):
                 os.remove(src_path)
@@ -149,34 +140,27 @@ class TesterAgent:
                      return {
                         "success": False, 
                         "output": "", 
-                        "error": f"Compilation Error:\n{compile_res.stderr}", 
-                        "execution_time": 0.0
+                        "error": f"Compilation Error:\n{compile_res.stderr}"
                      }
                 
-                # Execute
-                start_time = time.time()
-                # Run java from the temp directory, specifying classpath
                 run_res = subprocess.run(
                     ["java", "-cp", temp_dir, class_name],
                     capture_output=True,
                     text=True,
                     timeout=10
                 )
-                execution_time = time.time() - start_time
                 
                 return {
                     "success": run_res.returncode == 0,
                     "output": run_res.stdout,
-                    "error": run_res.stderr,
-                    "execution_time": execution_time
+                    "error": run_res.stderr
                 }
                 
             except FileNotFoundError:
                  return {
                     "success": False, 
                     "output": "", 
-                    "error": "Java compiler (javac) not found. Please ensure JDK is installed and in PATH.", 
-                    "execution_time": 0.0
+                    "error": "Java compiler (javac) not found. Please ensure JDK is installed and in PATH."
                  }
             except Exception as e:
-                return {"success": False, "output": "", "error": str(e), "execution_time": 0.0}
+                return {"success": False, "output": "", "error": str(e)}

@@ -53,30 +53,21 @@ class SecurityWorkflow:
         }
 
     def tester_step(self, state: WorkflowState):
-        # Check if the code is SQL (based on common keywords)
-        # The general TesterAgent runs Python, so it will fail on raw SQL.
-        code_start = state['current_code'].strip().upper()[:10]
-        sql_keywords = ["SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "ALTER", "DROP"]
+        language = state.get('language', '').lower()
+        allowed_langs = ['sql', 'postgresql', 'postgres']
+
+        if language not in allowed_langs:
+             log = f"Tester: Unsupported language '{language}'. Security workflow only supports SQL and PostgreSQL."
+             return {
+                 "status": "failed",
+                 "feedback": f"Security Check Error: Only SQL/PostgreSQL are supported. Got '{language}'.",
+                 "logs": state['logs'] + [log]
+             }
         
-        is_sql = any(code_start.startswith(kw) for kw in sql_keywords)
-
-        if is_sql:
-            # Skip python execution test for SQL snippets
-            log = "Tester: SQL snippet detected. Skipping Python runtime check (PASSED)."
-            return {
-                "status": "passed",
-                "feedback": "",
-                "logs": state['logs'] + [log]
-            }
-
-        # Sanity check: Does the code even run?
-        res = self.tester.run_test(state['current_code'], language=state.get('language', 'python'))
-        success = res['success']
-        err = res['error']
-        log = f"Tester: Syntax/Runtime Check: {'PASSED' if success else 'FAILED'}"
+        log = "Tester: SQL/PostgreSQL detected. Runtime check skipped."
         return {
-            "status": "passed" if success else "failed",
-            "feedback": f"Runtime Error: {err}" if not success else "",
+            "status": "passed",
+            "feedback": "",
             "logs": state['logs'] + [log]
         }
 

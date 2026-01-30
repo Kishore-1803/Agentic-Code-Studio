@@ -13,8 +13,6 @@ class WorkflowState(TypedDict):
     iterations: int
     status: str
     logs: list
-    initial_time: float
-    final_time: float
     # Complexity fields
     orig_time_complexity: str
     orig_space_complexity: str
@@ -110,39 +108,11 @@ class OptimizationWorkflow:
 
     def tester_step(self, state: WorkflowState):
         test_driver = state.get('test_code', '')
-        
-        # If we have a generated driver, we use that INSTEAD of appending.
-        # But wait, the driver usually needs the function definition too.
-        # The generate_test_driver prompt asks to "Call the relevant function from the 'Code'".
-        # This implies we still need to combine them.
-        # BUT, if the driver imports libraries, putting it at the end might be late for Python (but usually okay).
-        # For C++, includes must be at top.
-        
-        # Strategy:
-        # We will NOT append test_code blindly anymore in TesterAgent if we can help it.
-        # But TesterAgent logic is: write code + "\n\n" + test_code.
-        
-        # For Python: It works fine.
-        # For C++: A driver usually means a `main()` function.
-        # The `code` (optimized function) + `test_code` (main function) = Valid C++.
-        # So the standard concatenation logic is actually fine for C++ structure,
-        # PROVIDED the driver includes necessary headers if they are missing from the function snippet.
-        
         # Run original first if not done
-        initial_time = state.get('initial_time', 0.0)
         language = state.get('language', 'python')
-        
-        if initial_time == 0.0:
-            res_orig = self.tester.run_test(state['code'], test_driver, language)
-            initial_time = res_orig['execution_time']
-            
         res_opt = self.tester.run_test(state['current_code'], test_driver, language)
-        final_time = res_opt['execution_time']
-        
         success = res_opt['success']
-        improvement = "Slower" if final_time > initial_time else "Faster"
         
-        # Log simplified to just success/failure status as requested
         log = f"Tester: Test Case {'Passed' if success else 'Failed'}"
         
         new_logs = state['logs'] + [log]
@@ -156,8 +126,6 @@ class OptimizationWorkflow:
                 new_logs.append(f"Error Details: {error_msg[:500]}") # Limit length
 
         return {
-            "initial_time": initial_time,
-            "final_time": final_time,
             "logs": new_logs
         }
 
