@@ -13,18 +13,18 @@ Built on the **Actor-Critic** architecture using **LangGraph**, it orchestrates 
 
 ##  Key Features
 
-*   Automated Bug Fixing**: A loop of proposing fixes, critiquing logic, and verifying with tests.
-*   Code Optimization**: Specialized workflows to analyze time/space complexity and refactor code for better performance. Includes automatic test driver generation.
-*   Security Auditing**: Scans for vulnerabilities (SQLi, XSS, etc.) and proposes secure patches. 
+*   Automated Bug Fixing: A loop of proposing fixes, critiquing logic, and verifying with tests.
+*   Code Optimization: Specialized workflows to analyze time/space complexity and refactor code for better performance. Includes automatic test driver generation.
+*   Security Auditing: Scans for vulnerabilities (SQLi, XSS, etc.) and proposes secure patches. 
     **Specialized Support**: Dedicated checks for **SQL** and **PostgreSQL** injection patterns.
-*   Multi-Language Support**:
+*   Multi-Language Support:
     **Python**, **C++**, **Java** (for Logic & Optimization)
     **SQL**, **PostgreSQL** (for Security)
 *   Multi-Agent Collaboration**:
     **Developer Agent**: Writes and attempts to fix code.
     **Critic Agent**: Reviews code for best practices and logical errors using static analysis.
     **Tester Agent**: Generates and executes unit tests (supports Python, C++, Java) to confirm stability.
-*   Modern Interface**: A slick Next.js dashboard to visualize the agent workflow, diffs, and chat history.
+*   Modern Interface: A slick Next.js dashboard to visualize the agent workflow, diffs, and chat history.
 
 ---
 
